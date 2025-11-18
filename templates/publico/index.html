@@ -29,7 +29,7 @@
 
     <div class="container-fluid p-0">
         <h2>Casas Recientes en Venta:</h2>
-        <div class="row">
+        <div class="row" id="lista-casas-container">
             {% if lista_casas %}
                 {% for casa in lista_casas %}
                     <div class="col-lg-4 col-md-6 mb-4">
@@ -56,8 +56,7 @@
             {% endif %}
         </div>
     </div>
-    {% endblock %}
-
+{% endblock %}
 
 {% block sidebar %}
 
@@ -66,7 +65,7 @@
             ENCUENTRA TU FUTURA PROPIEDAD
         </div>
         <div class="card-body">
-            <form method="GET" action="{% url 'homepage' %}" class="row g-3">
+            <form method="GET" action="{% url 'homepage' %}" class="row g-3" id="form-filtros">
 
                 <div class="col-12">
                     <label for="q" class="form-label">Palabra clave</label>
@@ -158,4 +157,112 @@
         </div>
     </div>
 
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Búsqueda en tiempo real
+document.addEventListener('DOMContentLoaded', function() {
+    // Elementos del formulario
+    const searchInput = document.getElementById('q');
+    const habitacionesSelect = document.getElementById('habitaciones');
+    const minPrecioInput = document.getElementById('min_precio');
+    const maxPrecioInput = document.getElementById('max_precio');
+    
+    // Función para buscar en tiempo real
+    function buscarEnTiempoReal() {
+        const filtros = {
+            q: searchInput.value,
+            habitaciones: habitacionesSelect.value,
+            min_precio: minPrecioInput.value,
+            max_precio: maxPrecioInput.value
+        };
+        
+        // Llamar a la API para obtener resultados filtrados
+        fetchCasasFiltradas(filtros);
+    }
+    
+    // Escuchar cambios en los inputs
+    if (searchInput) {
+        let timeout;
+        searchInput.addEventListener('input', function() {
+            clearTimeout(timeout);
+            timeout = setTimeout(buscarEnTiempoReal, 500); // Esperar 500ms después de escribir
+        });
+    }
+    
+    if (habitacionesSelect) {
+        habitacionesSelect.addEventListener('change', buscarEnTiempoReal);
+    }
+    
+    if (minPrecioInput && maxPrecioInput) {
+        minPrecioInput.addEventListener('change', buscarEnTiempoReal);
+        maxPrecioInput.addEventListener('change', buscarEnTiempoReal);
+    }
+});
+
+// Función para obtener casas filtradas desde la API
+async function fetchCasasFiltradas(filtros) {
+    try {
+        // Construir URL con filtros
+        const params = new URLSearchParams();
+        Object.keys(filtros).forEach(key => {
+            if (filtros[key]) {
+                params.append(key, filtros[key]);
+            }
+        });
+        
+        let url = '/api/casas/filtrar/';
+        if (params.toString()) {
+            url += '?' + params.toString();
+        }
+        
+        const response = await fetch(url);
+        const casas = await response.json();
+        
+        // Actualizar la lista de casas
+        actualizarListaCasas(casas);
+    } catch (error) {
+        console.error('Error al cargar casas:', error);
+    }
+}
+
+// Función para actualizar la lista de casas en el HTML
+function actualizarListaCasas(casas) {
+    const contenedor = document.getElementById('lista-casas-container');
+    
+    if (!casas || casas.length === 0) {
+        contenedor.innerHTML = `
+            <div class="col">
+                <p>No se encontraron casas con los filtros aplicados.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '';
+    casas.forEach(casa => {
+        html += `
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card shadow-sm h-100">
+                    ${casa.imagenes && casa.imagenes.length > 0 ? 
+                        `<img src="${casa.imagenes[0].imagen}" class="card-img-top" 
+                              alt="${casa.imagenes[0].texto_alternativo || 'Imagen de propiedad'}" 
+                              style="height: 250px; object-fit: cover;">` :
+                        `<img src="https://via.placeholder.com/300x200.png?text=Sin+Imagen" class="card-img-top"
+                              alt="Imagen no disponible" style="height: 250px; object-fit: cover;">`
+                    }
+                    <div class="card-body">
+                        <h5 class="card-title">${casa.titulo}</h5>
+                        <p class="card-text fs-5 fw-bold text-success">$${casa.precio}</p>
+                        <a href="/casa/${casa.id_casa}/" class="btn btn-primary">Ver detalles</a>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    contenedor.innerHTML = html;
+}
+</script>
 {% endblock %}

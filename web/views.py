@@ -10,7 +10,8 @@ from django.core.mail import send_mail
 from django.contrib import messages
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .serializers import CasaListSerializer
+from rest_framework import status
+from .serializers import CasaListSerializer, CasaDetailSerializer, CasaCreateSerializer
 
 
 def render_to_pdf(template_src, context_dict={}):
@@ -231,24 +232,105 @@ def contact_view(request):
     return render(request, 'publico/contacto.html', contexto)
 
 
-# --- VISTA DE API REST ---
+# --- VISTAS DE API REST - CRUD COMPLETO ---
 
-@api_view(['GET'])  # Esta vista solo aceptará peticiones GET
+@api_view(['GET', 'POST'])
 def casa_api_list(request):
     """
-    API REST para listar todas las casas en venta.
+    GET: Listar todas las casas (resumen)
+    POST: Crear nueva casa
+    """
+    if request.method == 'GET':
+        casas = Casa.objects.all()
+        serializer = CasaListSerializer(casas, many=True)
+        return Response(serializer.data)
+    
+    elif request.method == 'POST':
+        serializer = CasaCreateSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET', 'PUT', 'DELETE'])
+def casa_api_detail(request, id_casa):
+    """
+    GET: Obtener detalles completos de una casa
+    PUT: Actualizar una casa
+    DELETE: Eliminar una casa
     """
     try:
-        # 1. Obtenemos las casas
-        casas = Casa.objects.filter(estatus='en venta')
-
-        # 2. Las pasamos por el serializador
-        # 'many=True' porque estamos serializando una lista de objetos
-        serializer = CasaListSerializer(casas, many=True)
-
-        # 3. Devolvemos la respuesta JSON
+        casa = Casa.objects.get(id_casa=id_casa)
+    except Casa.DoesNotExist:
+        return Response(
+            {'error': 'Casa no encontrada'}, 
+            status=status.HTTP_404_NOT_FOUND
+        )
+    
+    if request.method == 'GET':
+        serializer = CasaDetailSerializer(casa)
         return Response(serializer.data)
+    
+    elif request.method == 'PUT':
+        serializer = CasaCreateSerializer(casa, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    elif request.method == 'DELETE':
+        casa.delete()
+        return Response(
+            {'message': 'Casa eliminada correctamente'}, 
+            status=status.HTTP_204_NO_CONTENT
+        )
 
-    except Exception as e:
-        # Devolvemos un error 500 si algo falla
-        return Response({'error': str(e)}, status=500)
+@api_view(['GET'])
+def casa_api_search(request):
+    """
+    Buscar casas por título, descripción o dirección
+    """
+    query = request.GET.get('q', '')
+    if query:
+        casas = Casa.objects.filter(
+            Q(titulo__icontains=query) |
+            Q(descripcion__icontains=query) |
+            Q(direccion__icontains=query)
+        )
+    else:
+        casas = Casa.objects.all()
+    
+    serializer = CasaListSerializer(casas, many=True)
+    return Response(serializer.data)
+
+@api_view(['GET'])
+def casa_api_filter(request):
+    """
+    Filtrar casas por múltiples criterios
+    """
+    filters = {}
+    
+    # Aplicar filtros solo si se proporcionan
+    if 'estatus' in request.GET:
+        filters['estatus'] = request.GET['estatus']
+    if 'min_precio' in request.GET:
+        filters['precio__gte'] = request.GET['min_precio']
+    if 'max_precio' in request.GET:
+        filters['precio__lte'] = request.GET['max_precio']
+    if 'habitaciones' in request.GET:
+        filters['habitaciones'] = request.GET['habitaciones']
+    if 'banos' in request.GET:
+        filters['banos'] = request.GET['banos']
+    
+    casas = Casa.objects.filter(**filters)
+    serializer = CasaListSerializer(casas, many=True)
+    return Response(serializer.data)
+
+@api_view(['GET'])
+def casa_api_activas(request):
+    """
+    Obtener solo casas con estatus 'en venta'
+    """
+    casas = Casa.objects.filter(estatus='en venta')
+    serializer = CasaListSerializer(casas, many=True)
+    return Response(serializer.data)

@@ -1,7 +1,6 @@
 from rest_framework import serializers
 from .models import Casa, ImagenCasa
 
-
 class ImagenCasaSerializer(serializers.ModelSerializer):
     """ Serializador para las imágenes de una casa """
 
@@ -29,4 +28,30 @@ class CasaListSerializer(serializers.ModelSerializer):
             'banos',
             'superficie_m2',
             'imagenes'  # Añadimos las imágenes
+        ]
+
+class CasaDetailSerializer(serializers.ModelSerializer):
+        """
+        Serializador para mostrar TODOS los detalles de una casa
+        """
+        imagenes = ImagenCasaSerializer(many=True, read_only=True)
+
+        class Meta:
+            model = Casa
+            fields = [
+            'id_casa', 'titulo', 'descripcion', 'precio', 'direccion',
+            'latitud', 'longitud', 'estatus', 'habitaciones', 'banos',
+            'superficie_m2', 'fecha_publicacion', 'imagenes'
+        ]
+            
+class CasaCreateSerializer(serializers.ModelSerializer):
+    """
+    Serializador para CREAR y ACTUALIZAR casas
+    """
+    class Meta:
+        model = Casa
+        fields = [
+            'titulo', 'descripcion', 'precio', 'direccion',
+            'latitud', 'longitud', 'estatus', 'habitaciones', 
+            'banos', 'superficie_m2'
         ]
