@@ -101,6 +101,18 @@
             <td>{{ casa.direccion|default:"N/A" }}</td>
         </tr>
         <tr>
+            <th>Municipio</th>
+            <td>{{ casa.municipio|default:"N/A" }}</td>
+        </tr>
+        <tr>
+            <th>Estado</th>
+            <td>{{ casa.estado|default:"N/A" }}</td>
+        </tr>
+        <tr>
+            <th>Código Postal</th>
+            <td>{{ casa.codigo_postal|default:"N/A" }}</td>
+        </tr>
+        <tr>
             <th>Habitaciones</th>
             <td>{{ casa.habitaciones|default:"N/A" }}</td>
         </tr>
@@ -112,6 +124,12 @@
             <th>Superficie</th>
             <td>{{ casa.superficie_m2|default:"N/A" }} m²</td>
         </tr>
+        {% if casa.latitud and casa.longitud %}
+        <tr>
+            <th>Coordenadas</th>
+            <td>{{ casa.latitud }}, {{ casa.longitud }}</td>
+        </tr>
+        {% endif %}
     </table>
 
     <div class="description">

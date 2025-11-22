@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Reporte de Ventas - Multicasa</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            color: #333;
+            font-size: 12px;
+        }
+        .container {
+            width: 100%;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 20px;
+        }
+        .header h2 {
+            margin: 5px 0;
+            font-size: 14px;
+            color: #666;
+        }
+        .section {
+            margin-bottom: 20px;
+        }
+        .section-title {
+            background-color: #f4f4f4;
+            padding: 8px;
+            font-weight: bold;
+            border-left: 4px solid #007bff;
+            margin-bottom: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+        .total-row {
+            background-color: #e9ecef;
+            font-weight: bold;
+        }
+        .resumen {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+        .fecha {
+            text-align: right;
+            color: #666;
+            font-size: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Reporte de Ventas - Multicasa</h1>
+            <h2>Resumen de Propiedades</h2>
+            <div class="fecha">Generado el: {{ fecha_reporte|date:"d/m/Y H:i" }}</div>
+        </div>
+
+        <!-- Resumen General -->
+        <div class="resumen">
+            <h3>Resumen General</h3>
+            <table>
+                <tr>
+                    <td><strong>Total Propiedades en Venta:</strong></td>
+                    <td>{{ casas_en_venta.count }}</td>
+                    <td><strong>Total Valor:</strong></td>
+                    <td>${{ total_en_venta|floatformat:2 }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Total Propiedades Vendidas:</strong></td>
+                    <td>{{ casas_vendidas.count }}</td>
+                    <td><strong>Total Valor:</strong></td>
+                    <td>${{ total_vendidas|floatformat:2 }}</td>
+                </tr>
+                <tr class="total-row">
+                    <td><strong>Total General:</strong></td>
+                    <td>{{ casas.count }}</td>
+                    <td><strong>Valor Total:</strong></td>
+                    <td>${{ total_general|floatformat:2 }}</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Casas en Venta -->
+        <div class="section">
+            <div class="section-title">Propiedades en Venta ({{ casas_en_venta.count }})</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Título</th>
+                        <th>Precio</th>
+                        <th>Municipio</th>
+                        <th>Habitaciones</th>
+                        <th>Baños</th>
+                        <th>Fecha Publicación</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for casa in casas_en_venta %}
+                    <tr>
+                        <td>{{ casa.id_casa }}</td>
+                        <td>{{ casa.titulo }}</td>
+                        <td>${{ casa.precio }}</td>
+                        <td>{{ casa.municipio|default:"-" }}</td>
+                        <td>{{ casa.habitaciones|default:"-" }}</td>
+                        <td>{{ casa.banos|default:"-" }}</td>
+                        <td>{{ casa.fecha_publicacion|date:"d/m/Y" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" style="text-align: center;">No hay propiedades en venta</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Casas Vendidas -->
+        <div class="section">
+            <div class="section-title">Propiedades Vendidas ({{ casas_vendidas.count }})</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Título</th>
+                        <th>Precio</th>
+                        <th>Municipio</th>
+                        <th>Habitaciones</th>
+                        <th>Baños</th>
+                        <th>Fecha Publicación</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for casa in casas_vendidas %}
+                    <tr>
+                        <td>{{ casa.id_casa }}</td>
+                        <td>{{ casa.titulo }}</td>
+                        <td>${{ casa.precio }}</td>
+                        <td>{{ casa.municipio|default:"-" }}</td>
+                        <td>{{ casa.habitaciones|default:"-" }}</td>
+                        <td>{{ casa.banos|default:"-" }}</td>
+                        <td>{{ casa.fecha_publicacion|date:"d/m/Y" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" style="text-align: center;">No hay propiedades vendidas</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div style="margin-top: 30px; padding-top: 15px; border-top: 1px solid #ddd; text-align: center; font-size: 10px; color: #666;">
+            <p>Reporte generado por Multicasa Bienes Raíces</p>
+        </div>
+    </div>
+</body>
+</html>

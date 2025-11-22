@@ -11,6 +11,7 @@ from django.contrib import messages
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .serializers import CasaListSerializer
+from django.utils import timezone  # NUEVO IMPORT
 
 
 def render_to_pdf(template_src, context_dict={}):
@@ -65,13 +66,22 @@ def homepage(request):
     # CAMBIO: Agregar prefetch_related para optimizar consultas de imágenes
     casas = Casa.objects.filter(estatus='en venta').order_by('-fecha_publicacion').prefetch_related('imagenes')
 
-    query = request.GET.get('q')
-    if query:
-        casas = casas.filter(titulo__icontains=query) | casas.filter(descripcion__icontains=query)
+    # NUEVOS FILTROS - Reemplazando los anteriores
+    municipio = request.GET.get('municipio')
+    if municipio:
+        casas = casas.filter(municipio__icontains=municipio)
+
+    estado = request.GET.get('estado')
+    if estado:
+        casas = casas.filter(estado__icontains=estado)
 
     habitaciones = request.GET.get('habitaciones')
     if habitaciones and habitaciones != "":
         casas = casas.filter(habitaciones=habitaciones)
+
+    banos = request.GET.get('banos')
+    if banos and banos != "":
+        casas = casas.filter(banos=banos)
 
     min_precio = request.GET.get('min_precio')
     if min_precio:
@@ -81,9 +91,14 @@ def homepage(request):
     if max_precio:
         casas = casas.filter(precio__lte=max_precio)
 
-    # --- 3. CONTEXTO FINAL ---
+    # --- 3. ÚLTIMOS MOVIMIENTOS ---
+    # Obtener las últimas 5 casas (vendidas o en venta) ordenadas por fecha de modificación
+    ultimos_movimientos = Casa.objects.all().order_by('-fecha_publicacion')[:5]
+
+    # --- 4. CONTEXTO FINAL ---
     contexto = {
         'lista_casas': casas,
+        'ultimos_movimientos': ultimos_movimientos,  # NUEVO: agregar al contexto
         'titulo_pagina': 'Bienvenido a Multicasa',
         'valores_filtro': request.GET
     }
@@ -249,3 +264,43 @@ def casa_api_list(request):
 
     except Exception as e:
         return Response({'error': str(e)}, status=500)
+
+
+# --- NUEVA VISTA PARA REPORTE DE VENTAS ---
+@login_required(login_url='/admin/login/')
+def reporte_ventas_pdf(request):
+    """
+    Genera un PDF con el reporte de ventas de todas las casas.
+    """
+    # Obtener todas las casas
+    casas = Casa.objects.all().order_by('estatus', '-fecha_publicacion')
+    
+    # Calcular totales
+    casas_en_venta = casas.filter(estatus='en venta')
+    casas_vendidas = casas.filter(estatus='vendida')
+    
+    total_en_venta = sum(casa.precio for casa in casas_en_venta if casa.precio)
+    total_vendidas = sum(casa.precio for casa in casas_vendidas if casa.precio)
+    total_general = total_en_venta + total_vendidas
+    
+    # Contexto para el template
+    contexto = {
+        'casas': casas,
+        'casas_en_venta': casas_en_venta,
+        'casas_vendidas': casas_vendidas,
+        'total_en_venta': total_en_venta,
+        'total_vendidas': total_vendidas,
+        'total_general': total_general,
+        'fecha_reporte': timezone.now(),
+    }
+    
+    # Generar PDF
+    pdf = render_to_pdf('admin/reporte_ventas.html', contexto)
+    
+    if pdf:
+        response = HttpResponse(pdf, content_type='application/pdf')
+        filename = f"Reporte_Ventas_Multicasa_{timezone.now().strftime('%Y-%m-%d')}.pdf"
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
+    
+    return HttpResponse("Error al generar el PDF", status=400)
