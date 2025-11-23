@@ -13,6 +13,9 @@ urlpatterns = [
     # --- Ruta Privada/Admin ---
     path('dashboard/', views.admin_dashboard, name='admin_dashboard'),
 
-# --- RUTAS DE API REST (JSON) ---
+    # --- RUTAS DE API REST (JSON) ---
     path('api/casas/', views.casa_api_list, name='casa_api_list'),
+    
+    # --- NUEVA RUTA PARA REPORTE DE VENTAS (FUERA DEL ADMIN) ---
+    path('reporte-ventas/', views.reporte_ventas_pdf, name='reporte_ventas_pdf'),
 ]
