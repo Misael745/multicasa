@@ -75,6 +75,11 @@ def homepage(request):
     if estado:
         casas = casas.filter(estado__icontains=estado)
 
+    # NUEVO FILTRO: Código Postal
+    codigo_postal = request.GET.get('codigo_postal')
+    if codigo_postal:
+        casas = casas.filter(codigo_postal__icontains=codigo_postal)
+
     habitaciones = request.GET.get('habitaciones')
     if habitaciones and habitaciones != "":
         casas = casas.filter(habitaciones=habitaciones)
