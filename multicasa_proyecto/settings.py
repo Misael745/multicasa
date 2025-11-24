@@ -77,8 +77,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'multicasa',  # El nombre de la BD que creamos
-        'USER': 'root',  # Tu usuario de MySQL (ej. 'root')
-        'PASSWORD': '',  # Tu contraseña de MySQL
+        'USER': 'Alfonso',  # Tu usuario de MySQL (ej. 'root')
+        'PASSWORD': 'Alfonso1',  # Tu contraseña de MySQL
         'HOST': 'localhost',  # O la IP si el servidor está en otro lado
         'PORT': '3306',  # Puerto por defecto de MySQL
     }
