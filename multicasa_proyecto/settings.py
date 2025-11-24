@@ -145,3 +145,19 @@ EMAIL_HOST_USER = 'contactomulticasa@gmail.com'  # Cambia por tu email real
 EMAIL_HOST_PASSWORD = 'viwo ozig hkss vxpz'  # ← PASO IMPORTANTE
 DEFAULT_FROM_EMAIL = 'contactomulticasa@gmail.com'  # Mismo que EMAIL_HOST_USER
 # -----------------------------------------------------------------
+
+# =========================
+# CONFIGURACIÓN DE SEGURIDAD Y SESIONES
+# =========================
+
+# 1. Hace que la sesión expire al cerrar el navegador.
+# Nota: Esto generalmente aplica al cerrar TODA la ventana del navegador, no solo una pestaña.
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+# 2. Define un tiempo máximo de vida de la sesión en segundos (ej. 30 minutos).
+# Si el admin deja el panel abierto y se va, se desconectará automáticamente tras este tiempo.
+SESSION_COOKIE_AGE = 1800  # 1800 segundos = 30 minutos
+
+# 3. (Opcional) Refresca la duración de la sesión con cada clic.
+# Esto evita que se le cierre la sesión a alguien que está trabajando activamente
+SESSION_SAVE_EVERY_REQUEST = True
