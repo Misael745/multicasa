@@ -71,6 +71,10 @@ class ImagenCasaInline(admin.TabularInline):
     fields = ['imagen_base', 'texto_alternativo', 'orden']
     autocomplete_fields = ['imagen_base']
 
+    # --- VALIDACIÓN NUEVA: Mínimo 1 imagen requerida ---
+    min_num = 1
+    validate_min = True
+
 
 # =========================
 # FORMULARIO Casa + JS MAPA + VALIDACIONES
